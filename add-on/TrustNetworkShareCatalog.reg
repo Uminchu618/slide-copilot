@@ -1,0 +1,6 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\WEF\TrustedCatalogs\{5199483f-9ffa-4f24-bab9-6401b498bebd}]
+"Id"="{5199483f-9ffa-4f24-bab9-6401b498bebd}"
+"Url"="\\\\DAIV\\add-on"
+"Flags"=dword:00000001
