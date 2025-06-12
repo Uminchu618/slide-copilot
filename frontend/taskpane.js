@@ -70,26 +70,52 @@ Office.onReady(({ host }) => {
 });
 
 /**
- * 現在選択されているスライドからすべてのテキストを取得します。
+ * 現在選択されているスライドからすべてのテキストを取得します。（堅牢性向上版）
  * @returns {Promise<string>} スライド内のすべてのテキストを改行で連結した文字列。
  */
 async function fetchAllTextFromSlide() {
   return PowerPoint.run(async (context) => {
     const slide = context.presentation.getSelectedSlides().getItemAt(0);
     const shapes = slide.shapes;
-    shapes.load("items/textFrame/textRange/text");
 
+    // ステップ1: テキストフレームを持つシェイプのIDを安全に特定する
+    // 'hasTextFrame' は、テキストの有無を安全に確認できるプロパティです。
+    shapes.load("items/id, items/hasTextFrame");
     await context.sync();
 
-    const allText = [];
+    const textShapeIds = [];
     shapes.items.forEach((shape) => {
-      try {
-        const text = shape.textFrame.textRange.text.trim();
-        if (text) {
-          allText.push(text);
-        }
-      } catch (error) {
-        // テキストフレームを持たない図形の場合はエラーを無視
+      // 'hasTextFrame'がtrueのシェイプのIDを収集
+      if (shape.hasTextFrame) {
+        textShapeIds.push(shape.id);
+      }
+    });
+
+    // テキストを持つシェイプがなければ、ここで処理を終了
+    if (textShapeIds.length === 0) {
+      return "";
+    }
+
+    // ステップ2: 特定したIDのシェイプからのみ、テキストを一括で読み込む
+    const allText = [];
+    const textRangesToLoad = [];
+
+    for (const id of textShapeIds) {
+      // IDを使ってシェイプを取得し、そのテキスト範囲をロード対象にする
+      const shape = shapes.getItem(id);
+      const textRange = shape.textFrame.textRange;
+      textRange.load("text");
+      textRangesToLoad.push(textRange);
+    }
+
+    // ロード対象としたすべてのテキスト範囲を一度に同期
+    await context.sync();
+
+    // 同期完了後、各テキスト範囲からテキストを抽出
+    textRangesToLoad.forEach((textRange) => {
+      const text = textRange.text.trim();
+      if (text) {
+        allText.push(text);
       }
     });
 
@@ -97,39 +123,36 @@ async function fetchAllTextFromSlide() {
   });
 }
 
-/**
- * 現在選択されているスライドからすべての画像データをBase64形式の配列として取得します。
- * @returns {Promise<string[]>} Base64形式の画像データ配列。
- */
 async function fetchAllImagesFromSlide() {
   return PowerPoint.run(async (context) => {
     const slide = context.presentation.getSelectedSlides().getItemAt(0);
-    const shapes = slide.shapes;
-    // 図形の種類とPictureオブジェクトをロード
-    shapes.load("items/type, items/picture");
-
+    // height/width は任意。指定しなければ本来のサイズで取得
+    const imageResult = slide.getImageAsBase64({ height: 300 });
     await context.sync();
-
-    // "Image"タイプの図形のみをフィルタリング
-    const imageShapes = shapes.items.filter((shape) => shape.type === "Image");
-
-    if (imageShapes.length === 0) {
-      return [];
-    }
-
-    // 各画像図形からBase64データを取得するリクエストを作成
-    const imageBase64Results = imageShapes.map((shape) =>
-      shape.picture.getImageAsBase64(PowerPoint.PictureFormat.Png)
-    );
-
-    // すべての画像データ取得リクエストを同期
-    await context.sync();
-
-    // ClientResultオブジェクトから実際のBase64文字列を抽出して返す
-    return imageBase64Results.map((result) => result.value);
+    return [imageResult.value]; // Base64文字列
   });
 }
+/**
+ * シェイプコレクションを再帰的に探索し、画像シェイプのIDを収集するヘルパー関数。
+ * @param {PowerPoint.RequestContext} context - 現在のコンテキスト。
+ * @param {PowerPoint.ShapeCollection} shapes - 探索対象のシェイプコレクション。
+ * @param {string[]} imageShapeIds - 見つかった画像IDを格納する配列。
+ */
+async function findImagesRecursively(context, shapes, imageShapeIds) {
+  // 処理に必要なプロパティをロード
+  // group.shapes をロードするために 'group' が必要
+  shapes.load("items/id, items/type, items/group/shapes");
+  await context.sync();
 
+  for (const shape of shapes.items) {
+    if (shape.type === "Image") {
+      imageShapeIds.push(shape.id);
+    } else if (shape.type === "Group") {
+      // グループシェイプが見つかったら、その中のシェイプに対してこの関数を再度呼び出す（再帰）
+      await findImagesRecursively(context, shape.group.shapes, imageShapeIds);
+    }
+  }
+}
 /**
  * バックエンドにテキストと画像を送信し、AIによるサジェストを取得します。
  * @param {string} text 提案の基になるテキスト。
@@ -151,18 +174,4 @@ async function getAISuggestion(text, imagesBase64) {
   }
   const json = await resp.json();
   return json.suggestion;
-}
-
-// 以下の関数は直接使用していませんが、参考のために残しています。
-/**
- * スライドのスクリーンショットをBase64エンコードされた文字列として取得します。
- * @returns {Promise<string>} Base64形式の画像データ。
- */
-async function fetchSlideImageBase64() {
-  return PowerPoint.run(async (context) => {
-    const slide = context.presentation.getSelectedSlides().getItemAt(0);
-    const result = slide.exportAsBase64({ format: "png" });
-    await context.sync();
-    return result.value;
-  });
 }
