@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>PowerPoint データ抽出</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="taskpane.js"></script>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 10px;
+    }
+    #status {
+      margin-bottom: 12px;
+      color: #333;
+    }
+    #suggestion {
+      white-space: pre-wrap;
+      background: #f5f5f5;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      min-height: 50px; /* 高さを調整 */
+      overflow-y: auto;
+    }
+    #actionBtn { /* ID名を変更 */
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 6px 12px;
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+      background: #0078d4;
+      color: #fff;
+      cursor: pointer;
+    }
+    h2, h3 {
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+    #images-container img {
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    #texts-container p {
+        background-color: #f8f9fa;
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #e9ecef;
+        margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h2>PowerPoint データ抽出</h2>
+  <button id="actionBtn">スライドデータを取得</button>
+  <div id="status">ボタンを押してスライドのテキストと画像を取得します。</div>
+
+  <hr>
+
+  <h3>取得したテキスト</h3>
+  <div id="texts-container">テキストはここに表示されます。</div>
+
+  <h3>取得した画像</h3>
+  <div id="images-container">画像はここに表示されます。</div>
+
+  <hr>
+
+  <h3>AI サジェスト（現在無効）</h3>
+  <div id="suggestion">AI サジェスト結果がここに表示されます。</div>
+</body>
+</html>
