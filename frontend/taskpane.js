@@ -133,27 +133,6 @@ async function fetchAllImagesFromSlide() {
   });
 }
 /**
- * シェイプコレクションを再帰的に探索し、画像シェイプのIDを収集するヘルパー関数。
- * @param {PowerPoint.RequestContext} context - 現在のコンテキスト。
- * @param {PowerPoint.ShapeCollection} shapes - 探索対象のシェイプコレクション。
- * @param {string[]} imageShapeIds - 見つかった画像IDを格納する配列。
- */
-async function findImagesRecursively(context, shapes, imageShapeIds) {
-  // 処理に必要なプロパティをロード
-  // group.shapes をロードするために 'group' が必要
-  shapes.load("items/id, items/type, items/group/shapes");
-  await context.sync();
-
-  for (const shape of shapes.items) {
-    if (shape.type === "Image") {
-      imageShapeIds.push(shape.id);
-    } else if (shape.type === "Group") {
-      // グループシェイプが見つかったら、その中のシェイプに対してこの関数を再度呼び出す（再帰）
-      await findImagesRecursively(context, shape.group.shapes, imageShapeIds);
-    }
-  }
-}
-/**
  * バックエンドにテキストと画像を送信し、AIによるサジェストを取得します。
  * @param {string} text 提案の基になるテキスト。
  * @param {string[]} imagesBase64 スライドのBase64エンコードされた画像の配列。
