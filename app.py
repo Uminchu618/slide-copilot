@@ -32,24 +32,25 @@ app.add_middleware(
 @app.post("/api/suggest")
 async def suggest(req: SuggestRequest):
     try:
-        messages = [
-            {
-                "role": "system",
-                "content": "あなたはパワーポイント編集のアシスタントです。スライドのテキストと画像をもとに改善案を提案してください。",
-            },
-            {
-                "role": "user",
-                "content": f"テキスト:\n{req.text}",
-            },
-        ]
-        resp = openai.ChatCompletion.create(
-            model="gpt-4o",
-            messages=messages,
-            max_tokens=256,
-            temperature=0.7,
-        )
-        suggestion = resp.choices[0].message.content.strip()
-        return {"suggestion": suggestion}
+        # messages = [
+        #     {
+        #         "role": "system",
+        #         "content": "あなたはパワーポイント編集のアシスタントです。スライドのテキストと画像をもとに改善案を提案してください。",
+        #     },
+        #     {
+        #         "role": "user",
+        #         "content": f"テキスト:\n{req.text}",
+        #     },
+        # ]
+        # resp = openai.ChatCompletion.create(
+        #     model="gpt-4o",
+        #     messages=messages,
+        #     max_tokens=256,
+        #     temperature=0.7,
+        # )
+        # suggestion = resp.choices[0].message.content.strip()
+        # return {"suggestion": suggestion}
+        return {"suggestion": "OK"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
