@@ -75,24 +75,37 @@ async function fetchAllTextFromSlide() {
   return PowerPoint.run(async (context) => {
     const slide = context.presentation.getSelectedSlides().getItemAt(0);
     const shapes = slide.shapes;
-    shapes.load("items/id,items/type,items/textFrame/hasText");
+    shapes.load("items/id,items/type");
     await context.sync();
-    console.log(shapes);
-    const textShapes = shapes.items.filter(
-      (shape) => shape.textFrame.hasText === true
+
+    // テキストフレーム対応型を定義
+    const TEXTABLE_TYPES = [
+      PowerPoint.ShapeType.textBox,
+      PowerPoint.ShapeType.autoShape,
+      PowerPoint.ShapeType.geometricShape,
+    ];
+    const candidates = shapes.items.filter((s) =>
+      TEXTABLE_TYPES.includes(s.type)
     );
-    console.log(`スライド内のテキストシェイプ数: ${textShapes.length}`);
-    if (textShapes.length === 0) {
-      return "";
-    }
-    textShapes.forEach((shape) => shape.textFrame.textRange.load("text"));
+    console.log(shapes);
+    // hasText を個別ロード
+    candidates.forEach((s) => s.textFrame.load("hasText"));
     await context.sync();
+
+    // 実際にテキストを持つシェイプだけを抽出
+    const textShapes = candidates.filter((s) => s.textFrame.hasText);
+    console.log(`スライド内のテキストシェイプ数: ${textShapes.length}`);
+
+    // textRange.text を個別ロード
+    textShapes.forEach((s) => s.textFrame.textRange.load("text"));
+    await context.sync();
+
     const allText = textShapes
-      .map((shape) => shape.textFrame.textRange.text.trim())
-      .filter((t) => t.length > 0);
+      .map((s) => s.textFrame.textRange.text)
+      .join("\n");
     console.log(`スライド内のテキスト: ${allText}`);
 
-    return allText.join("\n");
+    return allText;
   });
 }
 
