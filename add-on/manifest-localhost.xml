@@ -7,8 +7,8 @@
   <Version>1.0.0.5</Version>
   <ProviderName>Sagara</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="Hello world"/>
-  <Description DefaultValue="A simple hello world Office Add-in."/>
+  <DisplayName DefaultValue="Slide Copilot"/>
+  <Description DefaultValue="Slide Suggestion AI Add-in."/>
   <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-64.png"/>
   <SupportUrl DefaultValue="https://learn.microsoft.com/office/dev/add-ins/overview/office-add-in-code-samples"/>
@@ -73,14 +73,14 @@
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GetStarted.Title" DefaultValue="Get started with the Hello world add-in!"/>
-        <bt:String id="CommandsGroup.Label" DefaultValue="Contoso Add-in"/>
-        <bt:String id="TaskpaneButton.Label" DefaultValue="Hello world"/>
-        <bt:String id="TaskpaneButton.SupertipTitle" DefaultValue="Hello world"/>
+        <bt:String id="GetStarted.Title" DefaultValue="Get started with the Slide Copilot add-in!"/>
+        <bt:String id="CommandsGroup.Label" DefaultValue="Slide Copilot Add-in"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Slide Copilot"/>
+        <bt:String id="TaskpaneButton.SupertipTitle" DefaultValue="Slide Copilot"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="GetStarted.Description" DefaultValue="Your sample add-in loaded successfully. Go to the HOME tab and click the 'Hello world' button to get started."/>
-        <bt:String id="TaskpaneButton.SupertipText" DefaultValue="Open the Hello world add-in"/>
+        <bt:String id="TaskpaneButton.SupertipText" DefaultValue="Open the Slide Copilot add-in"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
