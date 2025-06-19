@@ -4,11 +4,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-import openai
+from openai import OpenAI
+import traceback
 
 # 環境変数ロード
-load_dotenv(dotenv_path=".env")
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# load_dotenv(dotenv_path=".env")
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 # ─── リクエストボディ定義 ─────────────────────────────
@@ -57,8 +58,8 @@ async def suggest(req: SuggestRequest):
                 "content": [text_block, image_block],
             },
         ]
-        resp = openai.ChatCompletion.create(
-            model="gpt-4o",
+        resp = client.chat.completions.create(
+            model="gpt-4.1-2025-04-14",
             messages=messages,
             max_tokens=1024 * 8,
             temperature=0.7,
@@ -66,6 +67,8 @@ async def suggest(req: SuggestRequest):
         suggestion = resp.choices[0].message.content.strip()
         return {"suggestion": suggestion}
     except Exception as e:
+        tb = traceback.format_exc()
+        logging.error("Suggest API failed:\n%s", tb)
         raise HTTPException(status_code=500, detail=str(e))
 
 

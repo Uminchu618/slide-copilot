@@ -54,7 +54,7 @@ Office.onReady(({ host }) => {
       if (allText.trim() || allImages.length > 0) {
         statusDiv.textContent = "AI サジェスト中…";
         // 複数の画像を送信する場合、getAISuggestion関数の修正が必要です
-        const suggestion = await getAISuggestion(allText, allImages);
+        const suggestion = await getAISuggestion(allText, allImages[0]);
         suggestionDiv.textContent = suggestion;
         statusDiv.textContent = "AI サジェスト完了。";
       }
