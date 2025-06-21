@@ -51,15 +51,13 @@ Office.onReady(({ host }) => {
 
       statusDiv.textContent = "データの取得が完了しました。";
 
-      // --- AIへの問い合わせ（コメントアウト） ---
-      // if (allText.trim() || allImages.length > 0) {
-      //   statusDiv.textContent = "AI サジェスト中…";
-      //   // 複数の画像を送信する場合、getAISuggestion関数の修正が必要です
-      //   const suggestion = await getAISuggestion(allText, allImages);
-      //   suggestionDiv.textContent = suggestion;
-      //   statusDiv.textContent = "AI サジェスト完了。";
-      // }
-      // --- ここまで ---
+      if (allText.trim() || allImages.length > 0) {
+        statusDiv.textContent = "AI サジェスト中…";
+        // 複数の画像を送信する場合、getAISuggestion関数の修正が必要です
+        const suggestion = await getAISuggestion(allText, allImages[0]);
+        suggestionDiv.textContent = suggestion;
+        statusDiv.textContent = "AI サジェスト完了。";
+      }
     } catch (err) {
       console.error(err);
       statusDiv.textContent = `エラー: ${err.message}`;
@@ -77,49 +75,37 @@ async function fetchAllTextFromSlide() {
   return PowerPoint.run(async (context) => {
     const slide = context.presentation.getSelectedSlides().getItemAt(0);
     const shapes = slide.shapes;
-
-    // ステップ1: テキストフレームを持つシェイプのIDを安全に特定する
-    // 'hasTextFrame' は、テキストの有無を安全に確認できるプロパティです。
-    shapes.load("items/id, items/hasTextFrame");
+    shapes.load("items/id,items/type");
     await context.sync();
 
-    const textShapeIds = [];
-    shapes.items.forEach((shape) => {
-      // 'hasTextFrame'がtrueのシェイプのIDを収集
-      if (shape.hasTextFrame) {
-        textShapeIds.push(shape.id);
-      }
-    });
-
-    // テキストを持つシェイプがなければ、ここで処理を終了
-    if (textShapeIds.length === 0) {
-      return "";
-    }
-
-    // ステップ2: 特定したIDのシェイプからのみ、テキストを一括で読み込む
-    const allText = [];
-    const textRangesToLoad = [];
-
-    for (const id of textShapeIds) {
-      // IDを使ってシェイプを取得し、そのテキスト範囲をロード対象にする
-      const shape = shapes.getItem(id);
-      const textRange = shape.textFrame.textRange;
-      textRange.load("text");
-      textRangesToLoad.push(textRange);
-    }
-
-    // ロード対象としたすべてのテキスト範囲を一度に同期
+    // テキストフレーム対応型を定義
+    const TEXTABLE_TYPES = [
+      PowerPoint.ShapeType.textBox,
+      PowerPoint.ShapeType.autoShape,
+      PowerPoint.ShapeType.geometricShape,
+    ];
+    const candidates = shapes.items.filter((s) =>
+      TEXTABLE_TYPES.includes(s.type)
+    );
+    console.log(shapes);
+    // hasText を個別ロード
+    candidates.forEach((s) => s.textFrame.load("hasText"));
     await context.sync();
 
-    // 同期完了後、各テキスト範囲からテキストを抽出
-    textRangesToLoad.forEach((textRange) => {
-      const text = textRange.text.trim();
-      if (text) {
-        allText.push(text);
-      }
-    });
+    // 実際にテキストを持つシェイプだけを抽出
+    const textShapes = candidates.filter((s) => s.textFrame.hasText);
+    console.log(`スライド内のテキストシェイプ数: ${textShapes.length}`);
 
-    return allText.join("\n");
+    // textRange.text を個別ロード
+    textShapes.forEach((s) => s.textFrame.textRange.load("text"));
+    await context.sync();
+
+    const allText = textShapes
+      .map((s) => s.textFrame.textRange.text)
+      .join("\n");
+    console.log(`スライド内のテキスト: ${allText}`);
+
+    return allText;
   });
 }
 
@@ -138,12 +124,12 @@ async function fetchAllImagesFromSlide() {
  * @param {string[]} imagesBase64 スライドのBase64エンコードされた画像の配列。
  * @returns {Promise<string>} AIからのサジェスト文字列。
  */
-async function getAISuggestion(text, imagesBase64) {
+async function getAISuggestion(text, imageBase64) {
   const resp = await fetch(`${BACKEND_URL}/api/suggest`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     // バックエンドのAPI仕様に応じて送信するデータの形式を調整してください
-    body: JSON.stringify({ text, images_base64: imagesBase64 }),
+    body: JSON.stringify({ text, image_base64: imageBase64 }),
   });
   if (!resp.ok) {
     const errorBody = await resp.text();
